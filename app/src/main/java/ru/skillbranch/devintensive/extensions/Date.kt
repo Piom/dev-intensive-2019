@@ -39,7 +39,7 @@ enum class TimeUnits {
     fun plural(value: Int): String {
         val additional = when (this) {
             SECOND -> {
-                getTimeAddition(value.toLong(), "секунду", "секунды", "секунд")
+                return getTimeAddition(value.toLong(), "секунду", "секунды", "секунд")
             }
             MINUTE -> {
                 getTimeAddition(value.toLong(), "минуту", "минуты", "минут")
@@ -86,13 +86,13 @@ fun Date.humanizeDiff(date: Date = Date()): String? {
         diff.days > 0 -> "${TimeUnits.DAY.plural(diff.days)} назад"
         diff.hours > 0 -> "${TimeUnits.HOUR.plural(diff.hours)} назад"
         diff.minutes > 0 -> "${TimeUnits.MINUTE.plural(diff.minutes)} назад"
-        diff.seconds > 0 -> "${TimeUnits.SECOND.plural(diff.seconds)} назад"
+        diff.seconds > 0 -> "несколько ${TimeUnits.SECOND.plural(5)} назад"
 
         diff.days < -336 -> "более чем через ${TimeUnits.YEAR.plural(1)}"
         diff.days < 0 -> "через ${TimeUnits.DAY.plural(diff.days)}"
         diff.hours < 0 -> "через ${TimeUnits.HOUR.plural(diff.hours)}"
         diff.minutes < 0 -> "через ${TimeUnits.MINUTE.plural(diff.minutes)}"
-        diff.seconds < 0 -> " через ${TimeUnits.SECOND.plural(diff.seconds)}"
+        diff.seconds < 0 -> "через несколько ${TimeUnits.SECOND.plural(5)}"
 
         else -> "только что"
     }
