@@ -2,11 +2,13 @@ package ru.skillbranch.devintensive.extensions
 
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.math.absoluteValue
 
 const val SECOND = 1000L
 const val MINUTE = 60 * SECOND
 const val HOUR = 60 * MINUTE
 const val DAY = 24 * HOUR
+const val YEAR = 336 * DAY
 
 
 fun Date.format(pattern: String = "HH:mm:ss dd.MM.yy"): String {
@@ -21,17 +23,53 @@ fun Date.add(value: Int, units: TimeUnits = TimeUnits.SECOND): Date {
         TimeUnits.MINUTE -> value * MINUTE
         TimeUnits.HOUR -> value * HOUR
         TimeUnits.DAY -> value * DAY
+        TimeUnits.YEAR -> value * YEAR
     }
     this.time = time
     return this
 }
 
 enum class TimeUnits {
-    SECOND, MINUTE, HOUR, DAY
+    SECOND, MINUTE, HOUR, DAY, YEAR;
+
+    fun plural(value: Long): String {
+        return plural(value.toInt())
+    }
+
+    fun plural(value: Int): String {
+        val additional = when (this) {
+            SECOND -> {
+                getTimeAddition(value.toLong(), "секунду", "секунды", "секунд")
+            }
+            MINUTE -> {
+                getTimeAddition(value.toLong(), "минуту", "минуты", "минут")
+            }
+            HOUR -> {
+                getTimeAddition(value.toLong(), "час", "часа", "часов")
+            }
+            DAY -> {
+                getTimeAddition(value.toLong(), "день", "дня", "дней")
+            }
+            YEAR -> {
+                return getTimeAddition(value.toLong(), "год", "года", "лет")
+            }
+        }
+        return "${value.absoluteValue} $additional"
+    }
+
+    fun getTimeAddition(value: Long, caseOne: String, caseTwo: String, caseFive: String): String {
+        val absolute = value.absoluteValue
+        return when {
+            ((absolute % 10) == 1L) && ((absolute % 100) != 11L) -> caseOne
+            ((absolute % 10) >= 2L) && ((absolute % 10) <= 4L) && ((absolute % 100) < 10L || (absolute % 100) >= 20L) -> caseTwo
+            else -> caseFive
+        }
+
+    }
 }
 
 class TimeDiff(
-    val milSec: Long
+        val milSec: Long
 ) {
     val seconds = milSec / SECOND
     val minutes = milSec / MINUTE
@@ -39,34 +77,22 @@ class TimeDiff(
     val days = milSec / DAY
 }
 
+
 fun Date.humanizeDiff(date: Date = Date()): String? {
     val diff = TimeDiff(date.time - this.time)
-    fun getTimeAddition(value: Long, caseOne: String, caseTwo: String, caseFive: String): String {
-
-        return when {
-            ((value % 10) == 1L) && ((value % 100) != 11L) -> caseOne
-            ((value % 10) >= 2L) && ((value % 10) <= 4L) && ((value % 100) < 10L || (value % 100) >= 20L) -> caseTwo
-            else -> caseFive
-        }
-
-    }
 
     return when {
-        diff.days > 336 -> "более ${diff.days / 336} ${getTimeAddition(diff.days / 336, "год", "года", "лет")} назад"
-        diff.days > 28 -> "${diff.days / 28} ${getTimeAddition(diff.days / 28, "месяц", "месяца", "месяцев")} назад"
-        diff.days > 6 -> "${diff.days / 6} ${getTimeAddition(diff.days / 6, "неделю", "недели", "недель")} назад"
-        diff.days > 0 -> "${diff.days} ${getTimeAddition(diff.days, "день", "дня", "дней")} назад"
-        diff.hours > 0 -> "${diff.hours} ${getTimeAddition(diff.hours, "час", "часа", "часов")} назад"
-        diff.minutes > 0 -> "${diff.minutes} ${getTimeAddition(diff.minutes, "минуту", "минуты", "минут")} назад"
-        diff.seconds > 0 -> "${diff.seconds} ${getTimeAddition(diff.seconds, "секунду", "секунды", "секунд")} назад"
+        diff.days > 336 -> "более ${TimeUnits.YEAR.plural(2)} назад"
+        diff.days > 0 -> "${TimeUnits.DAY.plural(diff.days)} назад"
+        diff.hours > 0 -> "${TimeUnits.HOUR.plural(diff.hours)} назад"
+        diff.minutes > 0 -> "${TimeUnits.MINUTE.plural(diff.minutes)} назад"
+        diff.seconds > 0 -> "${TimeUnits.SECOND.plural(diff.seconds)} назад"
 
-        diff.days < -336 -> "более чем через ${diff.days / 336} ${getTimeAddition(diff.days / 336, "год", "год", "год")}"
-        diff.days < -28 -> "через ${diff.days / 28} ${getTimeAddition(diff.days / 28, "месяц", "месяца", "месяцев")} назад"
-        diff.days < -6 -> "через ${diff.days / 6} ${getTimeAddition(diff.days / 6, "неделю", "недели", "недель")} назад"
-        diff.days < 0 -> "через ${diff.days} ${getTimeAddition(diff.days, "день", "дня", "дней")} назад"
-        diff.hours < 0 -> "через ${diff.hours} ${getTimeAddition(diff.hours, "час", "часа", "часов")} назад"
-        diff.minutes < 0 -> "через ${diff.minutes} ${getTimeAddition(diff.minutes, "минуту", "минуты", "минут")} назад"
-        diff.seconds < 0 -> " через ${diff.seconds} ${getTimeAddition(diff.seconds, "секунду", "секунды", "секунд")} назад"
+        diff.days < -336 -> "более чем через ${TimeUnits.YEAR.plural(1)}"
+        diff.days < 0 -> "через ${TimeUnits.DAY.plural(diff.days)}"
+        diff.hours < 0 -> "через ${TimeUnits.HOUR.plural(diff.hours)}"
+        diff.minutes < 0 -> "через ${TimeUnits.MINUTE.plural(diff.minutes)}"
+        diff.seconds < 0 -> " через ${TimeUnits.SECOND.plural(diff.seconds)}"
 
         else -> "только что"
     }
