@@ -32,14 +32,14 @@ fun Date.add(value: Int, units: TimeUnits = TimeUnits.SECOND): Date {
 enum class TimeUnits {
     SECOND, MINUTE, HOUR, DAY, YEAR;
 
-    fun plural(value: Long): String {
-        return plural(value.toInt())
+    fun plural(value: Long, withValueYS: Boolean = true): String {
+        return plural(value.toInt(), withValueYS)
     }
 
-    fun plural(value: Int): String {
+    fun plural(value: Int, withValueYS: Boolean = true): String {
         val additional = when (this) {
             SECOND -> {
-                return getTimeAddition(value.toLong(), "секунду", "секунды", "секунд")
+                getTimeAddition(value.toLong(), "секунду", "секунды", "секунд")
             }
             MINUTE -> {
                 getTimeAddition(value.toLong(), "минуту", "минуты", "минут")
@@ -51,10 +51,10 @@ enum class TimeUnits {
                 getTimeAddition(value.toLong(), "день", "дня", "дней")
             }
             YEAR -> {
-                return getTimeAddition(value.toLong(), "год", "года", "лет")
+                getTimeAddition(value.toLong(), "год", "года", "лет")
             }
         }
-        return "${value.absoluteValue} $additional"
+        return if (withValueYS) "${value.absoluteValue} $additional" else additional
     }
 
     fun getTimeAddition(value: Long, caseOne: String, caseTwo: String, caseFive: String): String {
@@ -82,17 +82,17 @@ fun Date.humanizeDiff(date: Date = Date()): String? {
     val diff = TimeDiff(date.time - this.time)
 
     return when {
-        diff.days > 336 -> "более ${TimeUnits.YEAR.plural(2)} назад"
+        diff.days > 336 -> "более ${TimeUnits.YEAR.plural(2, false)} назад"
         diff.days > 0 -> "${TimeUnits.DAY.plural(diff.days)} назад"
         diff.hours > 0 -> "${TimeUnits.HOUR.plural(diff.hours)} назад"
         diff.minutes > 0 -> "${TimeUnits.MINUTE.plural(diff.minutes)} назад"
-        diff.seconds > 0 -> "несколько ${TimeUnits.SECOND.plural(5)} назад"
+        diff.seconds > 0 -> "несколько ${TimeUnits.SECOND.plural(5, false)} назад"
 
-        diff.days < -336 -> "более чем через ${TimeUnits.YEAR.plural(1)}"
+        diff.days < -336 -> "более чем через ${TimeUnits.YEAR.plural(1, false)}"
         diff.days < 0 -> "через ${TimeUnits.DAY.plural(diff.days)}"
         diff.hours < 0 -> "через ${TimeUnits.HOUR.plural(diff.hours)}"
         diff.minutes < 0 -> "через ${TimeUnits.MINUTE.plural(diff.minutes)}"
-        diff.seconds < 0 -> "через несколько ${TimeUnits.SECOND.plural(5)}"
+        diff.seconds < 0 -> "через несколько ${TimeUnits.SECOND.plural(5, false)}"
 
         else -> "только что"
     }
